@@ -27,6 +27,9 @@ def utility_log_log(W):
 def utility_log(W):
     return math.log(W)
 
+def utility_linear(W):
+    return W
+
 P_win = F(1,2)
 B = 2
 N = 100
