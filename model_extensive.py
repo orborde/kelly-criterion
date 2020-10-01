@@ -84,7 +84,8 @@ def expected_utility(f, utility, n):
 import matplotlib.pyplot as pyplot
 
 PREC=10
-fs = [kelly_fraction + F(x, PREC)*F(1,10) for x in range(-PREC//2, PREC//2)]
+#fs = [kelly_fraction + F(x, PREC)*F(1,10) for x in range(-PREC//2, PREC//2)]
+fs = [F(x, PREC) for x in range(PREC)]
 pprint.pprint(list(float(f) for f in fs))
 for n in tqdm(range(1, N, N // 10)):
     pyplot.plot(fs, [expected_utility(f, utility_log_log, n) for f in fs], label=str(n))
