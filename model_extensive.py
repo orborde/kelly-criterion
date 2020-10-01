@@ -4,12 +4,18 @@ import enum
 import itertools
 import math
 import numpy
+from fractions import Fraction as F
 from typing import *
+from tqdm import tqdm
+
+import pprint
 
 import operator as op
 from functools import reduce
 
-def ncr(n, r):
+def nCr(n, r):
+    assert n > 0
+    assert r <= n, (r,n)
     r = min(r, n-r)
     numer = reduce(op.mul, range(n, n-r, -1), 1)
     denom = reduce(op.mul, range(1, r+1), 1)
@@ -21,9 +27,9 @@ def utility_log_log(W):
 def utility_log(W):
     return math.log(W)
 
-P_win = 1/2
+P_win = F(1,2)
 B = 2
-N = 11
+N = 100
 
 kelly_fraction = P_win - (1-P_win) / B
 print('kelly fraction:', kelly_fraction)
@@ -54,9 +60,9 @@ def final_wealth(initial_wealth, f, outcomes: List[Outcome]):
     return wealth
 
 def final_wealth_by_ct(initial_wealth, f, wins, losses):
-    p = (P_win ** wins) * ((1 - P_win)**losses) * nCr(wins, (wins+losses))
+    p = (P_win ** wins) * ((1 - P_win)**losses) * nCr((wins+losses), wins)
     outcomes = [Outcome.W]*wins + [Outcome.L]*losses
-    return p, outcomes
+    return p, final_wealth(initial_wealth, f, outcomes)
 
 def p(outcomes: List[Outcome]):
     wins = outcomes.count(Outcome.W)
@@ -66,18 +72,19 @@ def p(outcomes: List[Outcome]):
 
 def expected_utility(f, utility, n):
     possible_worlds = [
-        (p(outcomes), final_wealth(1, f, outcomes))
-        for outcomes in itertools.product(Outcome, repeat=n)
+        final_wealth_by_ct(1, f, wins, (n - wins))
+        for wins in range(0, n+1)
     ]
 
     return sum(utility(wealth)*p for p,wealth in possible_worlds)
 
 import matplotlib.pyplot as pyplot
 
-fs = numpy.linspace(0,1,100)
-fs = fs[:-1]
-for n in range(N):
-    pyplot.plot(fs, [expected_utility(f, utility_log, n) for f in fs], label=str(n))
+PREC=10
+fs = [kelly_fraction + F(x, PREC)*F(1,10) for x in range(-PREC//2, PREC//2)]
+pprint.pprint(list(float(f) for f in fs))
+for n in tqdm(range(1, N, N // 10)):
+    pyplot.plot(fs, [expected_utility(f, utility_log_log, n) for f in fs], label=str(n))
 pyplot.axvline(x=kelly_fraction)
 pyplot.legend()
 pyplot.show()
